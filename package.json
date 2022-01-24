@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/heyjiani/tinyapp/issues"
   },
-  "homepage": "https://github.com/heyjiani/tinyapp#readme"
+  "homepage": "https://github.com/heyjiani/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.2"
+  }
 }
