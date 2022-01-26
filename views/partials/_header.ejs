@@ -11,10 +11,17 @@
       </div>
     </div>
     <div class="nav justify-content-end form-inline">
+      <% if (!username) {%>
       <form method="POST" action="/login">
         <input type="text" name="username" placeholder="Username" class="form-control">
         <button type="submit" class="btn btn-outline-light ml-1">Sign in</button>
       </form>
+      <%} else if (username) {%>
+      <form method="POST" action="/logout">
+        Logged in As: <strong><%= username %></strong>
+        <button type="submit" class="btn btn-outline-dark ml-1">Sign out</button>
+      </form>
+      <%} %>
     </div>
   </nav>
 </header>
