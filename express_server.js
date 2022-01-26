@@ -3,19 +3,26 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+
+//// implement middleware ////
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 app.set("view engine", "ejs");
 
+//// generate random short url id ////
 function generateRandomString() {
   return Math.random().toString(36).substring(3, 9);
 }
 
+//// DATABASE ////
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+
+/* ///ROUTES/// */
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -44,6 +51,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+//// CREATE NEW SHORT URL ////
 app.post("/urls", (req, res) => {
   // console.log(req.body);
   const shortURL = generateRandomString();
@@ -67,27 +75,30 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars)
 });
 
+//// DELETE URL ////
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
 
+//// EDIT URL ////
 app.post("/urls/:id", (req, res) => {
   const urlID = req.params.id;
   // console.log('ID is:', urlID);
-  // console.log('body is:', req.body);
   const newURL = req.body.newURL;
   urlDatabase[urlID] = newURL;
   res.redirect("/urls");
 });
 
+//// LOGIN (set cookie) ////
 app.post("/login", (req, res) => {
   // console.log(req.body.username);
   res.cookie('username', req.body.username);
   res.redirect('/urls');
 });
 
+//// LOGOUT (clear cookie) ////
 app.post("/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
