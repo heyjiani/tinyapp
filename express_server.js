@@ -112,6 +112,11 @@ app.post("/logout", (req, res) => {
   res.redirect('/urls');
 });
 
+app.get("*", (req, res) => {
+  res.statusCode = 404;
+  res.send(`${res.statusCode} Page Not Found :(`)
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
