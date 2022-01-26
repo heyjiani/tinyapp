@@ -91,6 +91,14 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
+//// REGISTER ////
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"],
+  }
+  res.render("registration", templateVars);
+});
+
 //// LOGIN (set cookie) ////
 app.post("/login", (req, res) => {
   // console.log(req.body.username);
