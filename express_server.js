@@ -166,6 +166,21 @@ app.get("/urls/:shortURL", (req, res) => {
 //// DELETE URL ////
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
+  const userID = req.cookies["user_id"];
+
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send('URL not found!\n');
+  }
+
+  if (!userID) {
+    return res.status(403).send(`You must be logged in to edit an URL!\n`);
+  }
+
+  const userURLs = urlsForUser(userID);
+  if (!userURLs[shortURL]) {
+    return res.status(403).send(`You do not have permission to edit this URL!\n`);
+  }
+
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
@@ -173,8 +188,22 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //// EDIT URL ////
 app.post("/urls/:id", (req, res) => {
   const urlID = req.params.id;
-  // console.log('ID is:', urlID);
   const newURL = req.body.newURL;
+  const userID = req.cookies["user_id"];
+
+  if (!urlDatabase[urlID]) {
+    return res.status(404).send('URL not found!\n');
+  }
+
+  if (!userID) {
+    return res.status(403).send(`You must be logged in to edit an URL!\n`);
+  }
+
+  const userURLs = urlsForUser(userID);
+  if (!userURLs[urlID]) {
+    return res.status(403).send(`You do not have permission to edit this URL!\n`);
+  }
+
   urlDatabase[urlID]["longURL"] = newURL;
   res.redirect("/urls");
 });
