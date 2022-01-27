@@ -12,14 +12,16 @@
     </div>
     <div class="nav justify-content-end form-inline">
       <% if (!user) {%>
-      <form method="POST" action="/login">
-        <input type="text" name="username" placeholder="Username" class="form-control">
+      <form method="GET" action="/register">
+        <button type="submit" class="btn btn-light ml-1">Register</button>
+      </form>
+      <form method="GET" action="/login">
         <button type="submit" class="btn btn-outline-light ml-1">Sign in</button>
       </form>
       <%} else if (user) {%>
       <form method="POST" action="/logout">
         Logged in As: <strong><%= user.email %></strong>
-        <button type="submit" class="btn btn-outline-dark ml-1">Sign out</button>
+        <button type="submit" class="btn btn-outline-dark ml-1">Log out</button>
       </form>
       <%} %>
     </div>
