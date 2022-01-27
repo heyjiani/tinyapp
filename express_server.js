@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 //// implement middleware ////
 app.use(bodyParser.urlencoded({extended: true}));
@@ -31,12 +32,12 @@ const users = {
   "abCd12": {
     id: "abCd12", 
     email: "trixie@example.com", 
-    password: "barbie"
+    password: bcrypt.hashSync("barbie")
   },
  "haha67": {
     id: "haha67", 
     email: "katya@example.com", 
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk")
   }
 };
 
@@ -231,10 +232,13 @@ app.post("/register", (req, res) => {
     res.status(400).send("Registration Failed: a user with that email already exists!");
   }
 
+  const hashedPassword = bcrypt.hashSync(userPassword);
+  // console.log(hashedPassword);
+
   users[userID] = {
     id: userID,
     email: userEmail,
-    password: userPassword
+    password: hashedPassword
   };
   // console.log(`user details:`, users);
   res.cookie("user_id", userID);
@@ -253,19 +257,21 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
+  const hashedPassword = bcrypt.hashSync(userPassword);
   const user = findUserByEmail(userEmail);
-  // console.log('user: ', user);
+  console.log('password: ', hashedPassword);
+  console.log(`user deets: `, user);
 
   if (!user) {
-    res.status(403).send("Login failed: Make sure you entered the right email/password and try again.");
+    return res.status(403).send("Login failed: Make sure you entered the right email/password and try again.");
   }
 
-  if (user.password !== userPassword) {
-    res.status(403).send("Login failed: Make sure you entered the right email/password and try again.");
+  if (!bcrypt.compareSync(userPassword, hashedPassword)) {
+    return res.status(403).send("Login failed: Make sure you entered the right email/password and try again.");
   }
 
   res.cookie("user_id", user.id);
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 //// LOGOUT (clear cookie) ////
