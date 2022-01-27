@@ -122,7 +122,6 @@ app.get("/register", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = {
     user: users[userID],
-    username: req.cookies["user_id"]
   }
   res.render("registration", templateVars);
 });
