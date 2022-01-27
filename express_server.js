@@ -113,8 +113,12 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL]["longURL"];
-  res.redirect(longURL);
+  if (!urlDatabase[shortURL]) {
+    res.status("404").send("OOPS! Looks like the link does not exist.");
+  } else {
+    const longURL = urlDatabase[shortURL]["longURL"];
+    res.redirect(longURL);
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
