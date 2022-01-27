@@ -38,7 +38,8 @@ function generateRandomString() {
 //// find user in database ////
 const findUserByEmail = (email) => {
   for (const userID in users) {
-    if (users[userID].email === email) return true;
+    const user = users[userID];
+    if (user.email === email) return user;
   }
   return false;
 };
@@ -135,7 +136,8 @@ app.post("/register", (req, res) => {
     res.status(400).send("Registration Failed: email and password cannot be blank!");
   }
 
-  if (findUserByEmail(userEmail)) {
+  const user = findUserByEmail(userEmail);
+  if (user) {
     res.status(400).send("Registration Failed: a user with that email already exists!");
   }
 
@@ -159,13 +161,26 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // res.cookie('user_id', req.body.user_id);
+  const userEmail = req.body.email;
+  const userPassword = req.body.password;
+  const user = findUserByEmail(userEmail);
+  // console.log('user: ', user);
+
+  if (!user) {
+    res.status(403).send("Login failed: Make sure you entered the right email/password and try again.");
+  }
+
+  if (user.password !== userPassword) {
+    res.status(403).send("Login failed: Make sure you entered the right email/password and try again.");
+  }
+
+  res.cookie("user_id", user.id);
   res.redirect('/urls');
 });
 
 //// LOGOUT (clear cookie) ////
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
