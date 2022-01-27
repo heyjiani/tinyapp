@@ -10,11 +10,6 @@ app.use(cookieParser());
 
 app.set("view engine", "ejs");
 
-//// generate random id ////
-function generateRandomString() {
-  return Math.random().toString(36).substring(3, 9);
-}
-
 //// DATABASE ////
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -32,6 +27,20 @@ const users = {
     email: "katya@example.com", 
     password: "dishwasher-funk"
   }
+};
+
+/* HELPER FUNCTIONS */
+//// generate random id ////
+function generateRandomString() {
+  return Math.random().toString(36).substring(3, 9);
+}
+
+//// find user in database ////
+const findUserByEmail = (email) => {
+  for (const userID in users) {
+    if (users[userID].email === email) return true;
+  }
+  return false;
 };
 
 
@@ -119,10 +128,21 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   const userID = generateRandomString();
+  const userEmail = req.body.email;
+  const userPassword = req.body.password;
+
+  if (!userEmail || !userPassword) {
+    res.status(400).send("Registration Failed: email and password cannot be blank!");
+  }
+
+  if (findUserByEmail(userEmail)) {
+    res.status(400).send("Registration Failed: a user with that email already exists!");
+  }
+
   users[userID] = {
     id: userID,
-    email: req.body.email,
-    password: req.body.password
+    email: userEmail,
+    password: userPassword
   };
   // console.log(`user details:`, users);
   res.cookie("user_id", userID);
