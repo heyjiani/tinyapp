@@ -68,21 +68,32 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//// CREATE NEW SHORT URL ////
+
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = {
     user: users[userID]
   };
+  // console.log('TEST--userID: ', userID);
+  if (!userID) {
+    res.redirect("/login");
+  }
+
   res.render("urls_new", templateVars);
 });
 
-//// CREATE NEW SHORT URL ////
 app.post("/urls", (req, res) => {
-  // console.log(req.body);
+  const userID = req.cookies["user_id"];
+  if (!userID) {
+    res.status("403").send("Access Denied: Please log in first!\n");
+  }
+
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL;
   // console.log(urlDatabase);
+
   res.redirect(`/urls/${shortURL}`);
 });
 
