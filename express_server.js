@@ -149,10 +149,17 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
-//// LOGIN (set cookie) ////
+//// LOGIN ////
+app.get("/login", (req, res) => {
+  const userID = req.cookies["user_id"];
+  const templateVars = {
+    user: users[userID]
+  };
+  res.render("login", templateVars);
+});
+
 app.post("/login", (req, res) => {
-  // console.log(req.body.username);
-  res.cookie('username', req.body.username);
+  // res.cookie('user_id', req.body.user_id);
   res.redirect('/urls');
 });
 
