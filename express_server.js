@@ -11,9 +11,20 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 
 //// DATABASE ////
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+      longURL: "http://www.lighthouselabs.ca",
+      userID: "abCd12"
+  },
+  "9sm5xK": {
+      longURL: "http://www.google.com",
+      userID: "haha67"
+  }
 };
 
 const users = {
@@ -78,9 +89,9 @@ app.get("/urls/new", (req, res) => {
   // console.log('TEST--userID: ', userID);
   if (!userID) {
     res.redirect("/login");
+  } else {
+    res.render("urls_new", templateVars);
   }
-
-  res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -91,23 +102,28 @@ app.post("/urls", (req, res) => {
 
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  // console.log(urlDatabase);
 
+  urlDatabase[shortURL] = {
+    longURL: longURL,
+    userID: userID
+  };
+  // console.log(`URL Database:`, urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL]["longURL"];
   res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const userID = req.cookies["user_id"];
+  const shortURL = req.params.shortURL;
   const templateVars = {
     user: users[userID],
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]
+    shortURL: shortURL,
+    longURL: urlDatabase[shortURL]["longURL"]
   };
   res.render("urls_show", templateVars)
 });
@@ -124,7 +140,7 @@ app.post("/urls/:id", (req, res) => {
   const urlID = req.params.id;
   // console.log('ID is:', urlID);
   const newURL = req.body.newURL;
-  urlDatabase[urlID] = newURL;
+  urlDatabase[urlID]["longURL"] = newURL;
   res.redirect("/urls");
 });
 
