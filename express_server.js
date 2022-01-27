@@ -3,19 +3,20 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
 //// implement middleware ////
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+app.use(cookieSession({
+  name: "session",
+  keys: ["swiss cheese plant under the sun", "monstera adansonii"]
+}))
 
 app.set("view engine", "ejs");
 
 //// DATABASE ////
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
 
 const urlDatabase = {
   "b2xVn2": {
@@ -241,7 +242,7 @@ app.post("/register", (req, res) => {
     password: hashedPassword
   };
   // console.log(`user details:`, users);
-  res.cookie("user_id", userID);
+  // res.cookie("user_id", userID);
   res.redirect("/urls");
 });
 
