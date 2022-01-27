@@ -31,7 +31,7 @@ const users = {
   "abCd12": {
     id: "abCd12", 
     email: "trixie@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "barbie"
   },
  "haha67": {
     id: "haha67", 
@@ -55,6 +55,20 @@ const findUserByEmail = (email) => {
   return false;
 };
 
+//// return URLs attached to specific user ID ////
+const urlsForUser = (id) => {
+  const userURLs = {};
+  for (const url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      userURLs[url] = {
+        longURL: urlDatabase[url]["longURL"],
+        userID: id
+      }
+    }
+  }
+  return userURLs;
+};
+
 
 /* ///ROUTES/// */
 
@@ -70,17 +84,23 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+
+//// MAIN URL PAGE ////
 app.get("/urls", (req, res) => {
   const userID = req.cookies["user_id"];
-  const templateVars = {
-    user: users[userID],
-    urls: urlDatabase
-  };
-  res.render("urls_index", templateVars);
+  if (!userID) {
+    res.send(`<html>You must <a href="http://localhost:8080/login">log in</a> to see this page!</html>`)
+  } else {
+    const userURLs = urlsForUser(userID);
+    const templateVars = {
+      user: users[userID],
+      urls: userURLs
+    };
+    res.render("urls_index", templateVars);
+  }
 });
 
 //// CREATE NEW SHORT URL ////
-
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = {
@@ -123,11 +143,22 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const userID = req.cookies["user_id"];
+
+  if (!userID) {
+    return res.send(`<html>You must <a href="http://localhost:8080/login">log in</a> to see this page!</html>`)
+  } 
+
   const shortURL = req.params.shortURL;
+  const userURLs = urlsForUser(userID);
+
+  if (!userURLs[shortURL]) {
+    return res.status("404").send("Page not found!")
+  }
+
   const templateVars = {
     user: users[userID],
     shortURL: shortURL,
-    longURL: urlDatabase[shortURL]["longURL"]
+    longURL: userURLs[shortURL]["longURL"]
   };
   res.render("urls_show", templateVars)
 });
