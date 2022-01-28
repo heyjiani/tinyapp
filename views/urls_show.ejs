@@ -18,7 +18,7 @@
       <form method="POST" action="/urls/<%= shortURL %>">
         <h2>Edit</h2>
         <label for="newURL">New URL:</label>
-        <input type="text" name="newURL" value="<%= longURL %>" style="width: 200px; margin: 0.5em 0em 1em 0em;">
+        <input type="text" name="newURL" value="<%= longURL %>" style="width: 200px; margin: 0.5em 0em 1em 0em;" required>
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
     </div>
