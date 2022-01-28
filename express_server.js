@@ -48,16 +48,19 @@ const users = {
 
 
 //// return error if user email/password are not a match ////
-const authenticateUser = (user, password) => {
-  if (!user) {
+const authenticateUser = (user) => {
+  const { email, password } = user;
+  const foundUser = findUserByEmail(email, users);
+
+  if (!foundUser) {
     return { error: "Email doesn't exist.", data: null };
   }
 
-  if (!bcrypt.compareSync(password, user.password)) {
+  if (!bcrypt.compareSync(password, foundUser.password)) {
     return { error: "Password doesn't match.", data: null };
   }
 
-  return { error: null, data: user };
+  return { error: null, data: foundUser };
 };
 
 //// add a new user, return error if criteria not met ////
@@ -240,7 +243,6 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-
   const { error, data } = addUser(req.body);
 
   if (error) {
@@ -262,16 +264,12 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const userEmail = req.body.email;
-  const userPassword = req.body.password;
-  const user = findUserByEmail(userEmail, users);
-
-  const { error, data } = authenticateUser(user, userPassword);
+  const { error, data } = authenticateUser(req.body);
   if (error) {
     return res.status(403).send(`<html>Login Failed: ${error}</html>`);
   }
 
-  req.session.user_id = user.id;
+  req.session.user_id = data.id;
   return res.redirect('/urls');
 });
 
