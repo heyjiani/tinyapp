@@ -52,7 +52,7 @@ const generateUserHelpers = (users, bcrypt) => {
     return { error: null, data: newUser };
   };
 
-  return { authenticateUser, addUser };
+  return { findUserByEmail, authenticateUser, addUser };
 };
 
 //// FUNCTIONS FOR PERFORMING ACTION ON URL DATABASE ////
