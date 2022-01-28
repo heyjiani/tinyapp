@@ -4,10 +4,13 @@ const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+
+/// import helper functions ///
 const { findUserByEmail } = require('./helpers');
 const { generateRandomString } = require('./helpers');
 const { urlsForUser } = require('./helpers');
-const generateUserHelpers = require('./helpers');
+const { generateUserHelpers } = require('./helpers');
+const { generateUrlHelpers } = require('./helpers');
 
 //// implement middleware ////
 app.use(bodyParser.urlencoded({extended: true}));
@@ -44,65 +47,11 @@ const users = {
   }
 };
 
+/// user registration/login helper functions
+const { authenticateUser, addUser } = generateUserHelpers(users, bcrypt);
 
-//// return error if user email/password are not a match ////
-const authenticateUser = (user) => {
-  const { email, password } = user;
-  const foundUser = findUserByEmail(email, users);
-
-  if (!foundUser) {
-    return { error: "Email doesn't exist.", data: null };
-  }
-
-  if (!bcrypt.compareSync(password, foundUser.password)) {
-    return { error: "Password doesn't match.", data: null };
-  }
-
-  return { error: null, data: foundUser };
-};
-
-//// add a new user, return error if criteria not met ////
-const addUser = (user) => {
-  const { email, password } = user;
-
-  if (!email || !password) {
-    return { error: "Email and password cannot be blank!", data: null };
-  }
-
-  const foundUser = findUserByEmail(email, users);
-  if (foundUser) {
-    return { error: "An user with that email already exists!", data: null };
-  }
-
-  const userID = generateRandomString();
-  const hashedPassword = bcrypt.hashSync(password);
-
-  const newUser = {id: userID, email, password: hashedPassword};
-  users[userID] = newUser;
-
-  return { error: null, data: newUser };
-};
-
-//// determine if URL can be modified ////
-const modifyURL = (url, id) => {
-  const { shortURL } = url;
-  const { userID } = id;
-
-  if (!urlDatabase[shortURL]) {
-    return { error: "URL not found!", urlID: null };
-  }
-
-  if (!userID) {
-    return { error: "You must be logged in to make changes to an URL!", urlID: null };
-  }
-
-  const userURLs = urlsForUser(userID, urlDatabase);
-  if (!userURLs[shortURL]) {
-    return { error: "You do not have permission to make changes to this URL!", urlID: null };
-  }
-
-  return { error: null, urlID: shortURL };
-};
+/// url modifying/deleting function
+const { modifyURL } = generateUrlHelpers(urlDatabase);
 
 /* ///ROUTES/// */
 
