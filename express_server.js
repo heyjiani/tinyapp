@@ -2,17 +2,15 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
-// const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const { findUserByEmail } = require('./helpers');
 const { generateRandomString } = require('./helpers');
 const { urlsForUser } = require('./helpers');
-// const { authenticateUser } = require('./helpers');
+const generateUserHelpers = require('./helpers');
 
 //// implement middleware ////
 app.use(bodyParser.urlencoded({extended: true}));
-// app.use(cookieParser());
 app.use(cookieSession({
   name: "session",
   keys: ["swiss cheese plant under the sun", "monstera adansonii"]
@@ -267,20 +265,11 @@ app.post("/logout", (req, res) => {
   return res.redirect('/urls');
 });
 
-//// EXTRAS ////
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
+//// 404 PAGE NOT FOUND ////
 app.get("*", (req, res) => {
-  res.statusCode = 404;
-  return res.send(`${res.statusCode} Page Not Found :(`);
+  return res.status(404).send(`404 Page Not Found :(\n`);
 });
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
