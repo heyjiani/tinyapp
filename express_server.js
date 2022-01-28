@@ -49,9 +49,9 @@ function generateRandomString() {
 }
 
 //// find user in database ////
-const findUserByEmail = (email) => {
-  for (const userID in users) {
-    const user = users[userID];
+const findUserByEmail = (email, database) => {
+  for (const userID in database) {
+    const user = database[userID];
     if (user.email === email) return user;
   }
   return false;
@@ -235,7 +235,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Registration Failed: email and password cannot be blank!");
   }
 
-  const user = findUserByEmail(userEmail);
+  const user = findUserByEmail(userEmail, users);
   if (user) {
     return res.status(400).send("Registration Failed: a user with that email already exists!");
   }
@@ -267,20 +267,18 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
-  const hashedPassword = bcrypt.hashSync(userPassword);
-  const user = findUserByEmail(userEmail);
+  const user = findUserByEmail(userEmail, users);
 
   if (!user) {
-    return res.status(403).send("Login failed: Make sure you entered the right email/password and try again.");
+    return res.status(403).send("Login failed: Make sure you entered the right email and try again.");
   }
 
-  if (!bcrypt.compareSync(hashedPassword, user.password)) {
-    return res.status(403).send("Login failed: Make sure you entered the right email/password and try again.");
+  if (!bcrypt.compareSync(userPassword, user.password)) {
+    return res.status(403).send("Login failed: Make sure you entered the right password and try again.");
   }
 
   // res.cookie("user_id", user.id);
   req.session.user_id = user.id;
-  // console.log(req.session.user_id);
   return res.redirect('/urls');
 });
 
