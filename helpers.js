@@ -1,74 +1,76 @@
-//// generate random id ////
+//// GENERATE RANDOM ID ////
 function generateRandomString() {
   return Math.random().toString(36).substring(3, 9);
 }
 
-//// find user in database ////
-const findUserByEmail = (email, database) => {
-  for (const userID in database) {
-    const user = database[userID];
-    if (user.email === email) return user;
-  }
-};
-
-//// return URLs attached to specific user ID ////
-const urlsForUser = (id, database) => {
-  const userURLs = {};
-  for (const url in database) {
-    if (database[url].userID === id) {
-      userURLs[url] = {
-        longURL: database[url]["longURL"],
-        userID: id
-      }
-    }
-  }
-  return userURLs;
-};
-
+//// FUNCTIONS FOR PERFORMING ACTIONS ON USER DATABASE ////
 const generateUserHelpers = (users, bcrypt) => {
 
-//// return error if user email/password are not a match ////
-const authenticateUser = (user) => {
-  const { email, password } = user;
-  const foundUser = findUserByEmail(email, users);
+  //// find user in database ////
+  const findUserByEmail = (email) => {
+    for (const userID in users) {
+      const user = users[userID];
+      if (user.email === email) return user;
+    }
+  };
 
-  if (!foundUser) {
-    return { error: "Email doesn't exist.", data: null };
-  }
+  //// return error if user email/password are not a match ////
+  const authenticateUser = (user) => {
+    const { email, password } = user;
+    const foundUser = findUserByEmail(email);
 
-  if (!bcrypt.compareSync(password, foundUser.password)) {
-    return { error: "Password doesn't match.", data: null };
-  }
+    if (!foundUser) {
+      return { error: "Email doesn't exist.", data: null };
+    }
 
-  return { error: null, data: foundUser };
-};
+    if (!bcrypt.compareSync(password, foundUser.password)) {
+      return { error: "Password doesn't match.", data: null };
+    }
 
-//// add a new user, return error if criteria not met ////
-const addUser = (user) => {
-  const { email, password } = user;
+    return { error: null, data: foundUser };
+  };
 
-  if (!email || !password) {
-    return { error: "Email and password cannot be blank!", data: null };
-  }
+  //// add a new user, return error if criteria not met ////
+  const addUser = (user) => {
+    const { email, password } = user;
 
-  const foundUser = findUserByEmail(email, users);
-  if (foundUser) {
-    return { error: "An user with that email already exists!", data: null };
-  }
+    if (!email || !password) {
+      return { error: "Email and password cannot be blank!", data: null };
+    }
 
-  const userID = generateRandomString();
-  const hashedPassword = bcrypt.hashSync(password);
+    const foundUser = findUserByEmail(email);
+    if (foundUser) {
+      return { error: "An user with that email already exists!", data: null };
+    }
 
-  const newUser = {id: userID, email, password: hashedPassword};
-  users[userID] = newUser;
+    const userID = generateRandomString();
+    const hashedPassword = bcrypt.hashSync(password);
 
-  return { error: null, data: newUser };
-};
+    const newUser = {id: userID, email, password: hashedPassword};
+    users[userID] = newUser;
+
+    return { error: null, data: newUser };
+  };
 
   return { authenticateUser, addUser };
-}
+};
 
+//// FUNCTIONS FOR PERFORMING ACTION ON URL DATABASE ////
 const generateUrlHelpers = (urlDatabase) => {
+
+  //// return URLs attached to specific user ID ////
+  const urlsForUser = (id) => {
+    const userURLs = {};
+    for (const url in urlDatabase) {
+      if (urlDatabase[url].userID === id) {
+        userURLs[url] = {
+          longURL: urlDatabase[url]["longURL"],
+          userID: id
+        }
+      }
+    }
+    return userURLs;
+  };
 
   //// determine if URL can be modified ////
   const modifyURL = (url, id) => {
@@ -88,17 +90,15 @@ const generateUrlHelpers = (urlDatabase) => {
       return { error: "You do not have permission to make changes to this URL!", urlID: null };
     }
 
-    return { error: null, urlID: shortURL };
+    return { error: null, urlID: shortURL, userID, userURLs };
   };
 
-  return { modifyURL };
+  return { urlsForUser, modifyURL };
 };
 
 
 module.exports = {
   generateRandomString,
-  findUserByEmail,
-  urlsForUser,
   generateUserHelpers,
   generateUrlHelpers
 };
