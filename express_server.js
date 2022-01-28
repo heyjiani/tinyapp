@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 // const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const findUserByEmail = require('./helpers');
 
 //// implement middleware ////
 app.use(bodyParser.urlencoded({extended: true}));
@@ -49,13 +50,13 @@ function generateRandomString() {
 }
 
 //// find user in database ////
-const findUserByEmail = (email, database) => {
-  for (const userID in database) {
-    const user = database[userID];
-    if (user.email === email) return user;
-  }
-  return false;
-};
+// const findUserByEmail = (email, database) => {
+//   for (const userID in database) {
+//     const user = database[userID];
+//     if (user.email === email) return user;
+//   }
+//   return false;
+// };
 
 //// return URLs attached to specific user ID ////
 const urlsForUser = (id) => {
