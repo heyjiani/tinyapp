@@ -85,6 +85,27 @@ const addUser = (user) => {
   return { error: null, data: newUser };
 };
 
+//// determine if URL can be modified ////
+const modifyURL = (url, id) => {
+  const { shortURL } = url;
+  const { userID } = id;
+
+  if (!urlDatabase[shortURL]) {
+    return { error: "URL not found!", urlID: null };
+  }
+
+  if (!userID) {
+    return { error: "You must be logged in to make changes to an URL!", urlID: null };
+  }
+
+  const userURLs = urlsForUser(userID, urlDatabase);
+  if (!userURLs[shortURL]) {
+    return { error: "You do not have permission to make changes to this URL!", urlID: null };
+  }
+
+  return { error: null, urlID: shortURL };
+};
+
 /* ///ROUTES/// */
 
 app.get("/", (req, res) => {
@@ -102,7 +123,7 @@ app.get("/urls.json", (req, res) => {
 
 //// MAIN URL PAGE ////
 app.get("/urls", (req, res) => {
-  const userID = req.session.user_id;
+  const userID = req.session.userID;
   if (!userID) {
     return res.status(401).send(
       `<html>
@@ -124,7 +145,7 @@ app.get("/urls", (req, res) => {
 
 //// CREATE NEW SHORT URL ////
 app.get("/urls/new", (req, res) => {
-  const userID = req.session.user_id;
+  const userID = req.session.userID;
   const templateVars = {
     user: users[userID]
   };
@@ -136,7 +157,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const userID = req.session.user_id;
+  const userID = req.session.userID;
   if (!userID) {
     return res.status("403").send("Access Denied: Please log in first!\n");
   }
@@ -162,7 +183,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const userID = req.session.user_id;
+  const userID = req.session.userID;
 
   if (!userID) {
     return res.send(`<html>You must <a href="http://localhost:8080/login">log in</a> to see this page!</html>`)
@@ -185,52 +206,30 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //// DELETE URL ////
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const userID = req.session.user_id;
-
-  if (!urlDatabase[shortURL]) {
-    return res.status(404).send('URL not found!\n');
+  const { error, urlID } = modifyURL(req.params, req.session);
+  if (error) {
+    return res.status(403).send(`<html><h3>${error}</h3></html>`);
   }
 
-  if (!userID) {
-    return res.status(403).send(`Yoi did u must be logged in to edit an URL!\n`);
-  }
-
-  const userURLs = urlsForUser(userID, urlDatabase);
-  if (!userURLs[shortURL]) {
-    return res.status(403).send(`You do not have permission to edit this URL!\n`);
-  }
-
-  delete urlDatabase[shortURL];
+  delete urlDatabase[urlID];
   return res.redirect("/urls");
 });
 
 //// EDIT URL ////
 app.post("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
   const newURL = req.body.newURL;
-  const userID = req.session.user_id;
-
-  if (!urlDatabase[shortURL]) {
-    return res.status(404).send('URL not found!\n');
+  const { error, urlID } = modifyURL(req.params, req.session);
+  if (error) {
+    return res.status(403).send(`<html><h3>${error}</h3></html>`);
   }
 
-  if (!userID) {
-    return res.status(403).send(`You must be logged in to edit an URL!\n`);
-  }
-
-  const userURLs = urlsForUser(userID, urlDatabase);
-  if (!userURLs[shortURL]) {
-    return res.status(403).send(`You do not have permission to edit this URL!\n`);
-  }
-
-  urlDatabase[shortURL]["longURL"] = newURL;
+  urlDatabase[urlID]["longURL"] = newURL;
   return res.redirect("/urls");
 });
 
 //// REGISTER ////
 app.get("/register", (req, res) => {
-  const userID = req.session.user_id;
+  const userID = req.session.userID;
   const templateVars = {
     user: users[userID],
   }
@@ -243,13 +242,13 @@ app.post("/register", (req, res) => {
     return res.status(400).send(`<html><h3>Registration Failed: ${error}</h3></html>`);
   }
 
-  req.session.user_id = data.id;
+  req.session.userID = data.id;
   return res.redirect("/urls");
 });
 
 //// LOGIN ////
 app.get("/login", (req, res) => {
-  const userID = req.session.user_id;
+  const userID = req.session.userID;
   const templateVars = {
     user: users[userID]
   };
@@ -262,7 +261,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send(`<html>Login Failed: ${error}</html>`);
   }
 
-  req.session.user_id = data.id;
+  req.session.userID = data.id;
   return res.redirect('/urls');
 });
 
