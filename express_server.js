@@ -108,8 +108,13 @@ const modifyURL = (url, id) => {
 
 /* ///ROUTES/// */
 
+//// HOME ////
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const userID = req.session.userID;
+  if (userID) {
+    return res.redirect("/urls");
+  }
+  return res.redirect("/login");
 });
 
 app.get("/hello", (req, res) => {
@@ -125,13 +130,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   const userID = req.session.userID;
   if (!userID) {
-    return res.status(401).send(
-      `<html>
-        <h3>
-        You must <a href="http://localhost:8080/login">log in</a> to see this page!
-        </h3>
-      </html>`
-    );
+    return res.status(401).send(`<html><h3>You must <a href="http://localhost:8080/login">log in</a> to see this page!</h3></html>`);
   } 
 
   const userURLs = urlsForUser(userID, urlDatabase);
