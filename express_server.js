@@ -117,20 +117,13 @@ app.get("/", (req, res) => {
   return res.redirect("/login");
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-
 //// MAIN URL PAGE ////
 app.get("/urls", (req, res) => {
   const userID = req.session.userID;
+  const loginHTML = `<a href="http://localhost:8080/login">log in</a>`;
+  const registerHTML = `<a href="http://localhost:8080/register">register</a>`
   if (!userID) {
-    return res.status(401).send(`<html><h3>You must <a href="http://localhost:8080/login">log in</a> to see this page!</h3></html>`);
+    return res.status(401).send(`<h3>You must ${loginHTML} or ${registerHTML} to see this page!</h3>`);
   } 
 
   const userURLs = urlsForUser(userID, urlDatabase);
@@ -268,6 +261,16 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session = null;
   return res.redirect('/urls');
+});
+
+//// EXTRAS ////
+
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
 });
 
 app.get("*", (req, res) => {
