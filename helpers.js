@@ -1,7 +1,7 @@
 //// GENERATE RANDOM ID ////
-function generateRandomString() {
+const generateRandomString = () => {
   return Math.random().toString(36).substring(3, 9);
-}
+};
 
 //// FUNCTIONS FOR PERFORMING ACTIONS ON USER DATABASE ////
 const generateUserHelpers = (users, bcrypt) => {
@@ -66,7 +66,7 @@ const generateUrlHelpers = (urlDatabase) => {
         userURLs[url] = {
           longURL: urlDatabase[url]["longURL"],
           userID: id
-        }
+        };
       }
     }
     return userURLs;
