@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 
-const { findUserByEmail } = require('../helpers');
+const { generateUserHelpers } = require('../helpers');
 
 const testUsers = {
   "userRandomID": {
@@ -14,6 +14,8 @@ const testUsers = {
     password: "dishwasher-funk"
   }
 };
+
+const { findUserByEmail } = generateUserHelpers(testUsers);
 
 describe('getUserByEmail', () => {
   it('should return a user with valid email', () => {
