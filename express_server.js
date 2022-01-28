@@ -102,11 +102,14 @@ app.get("/urls.json", (req, res) => {
 
 //// MAIN URL PAGE ////
 app.get("/urls", (req, res) => {
-  // const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
   if (!userID) {
     return res.status(401).send(
-      `<html><h3>You must <a href="http://localhost:8080/login">log in</a> to see this page!</h2></html>`
+      `<html>
+        <h3>
+        You must <a href="http://localhost:8080/login">log in</a> to see this page!
+        </h3>
+      </html>`
     );
   } 
 
@@ -121,12 +124,10 @@ app.get("/urls", (req, res) => {
 
 //// CREATE NEW SHORT URL ////
 app.get("/urls/new", (req, res) => {
-  // const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
   const templateVars = {
     user: users[userID]
   };
-  // console.log('TEST--userID: ', userID);
   if (!userID) {
     return res.redirect("/login");
   } 
@@ -135,7 +136,6 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  // const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
   if (!userID) {
     return res.status("403").send("Access Denied: Please log in first!\n");
@@ -148,7 +148,6 @@ app.post("/urls", (req, res) => {
     longURL: longURL,
     userID: userID
   };
-  // console.log(`URL Database:`, urlDatabase);
   return res.redirect(`/urls/${shortURL}`);
 });
 
@@ -163,7 +162,6 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  // const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
 
   if (!userID) {
@@ -188,7 +186,29 @@ app.get("/urls/:shortURL", (req, res) => {
 //// DELETE URL ////
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
-  // const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
+
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send('URL not found!\n');
+  }
+
+  if (!userID) {
+    return res.status(403).send(`Yoi did u must be logged in to edit an URL!\n`);
+  }
+
+  const userURLs = urlsForUser(userID, urlDatabase);
+  if (!userURLs[shortURL]) {
+    return res.status(403).send(`You do not have permission to edit this URL!\n`);
+  }
+
+  delete urlDatabase[shortURL];
+  return res.redirect("/urls");
+});
+
+//// EDIT URL ////
+app.post("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const newURL = req.body.newURL;
   const userID = req.session.user_id;
 
   if (!urlDatabase[shortURL]) {
@@ -204,37 +224,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     return res.status(403).send(`You do not have permission to edit this URL!\n`);
   }
 
-  delete urlDatabase[shortURL];
-  return res.redirect("/urls");
-});
-
-//// EDIT URL ////
-app.post("/urls/:id", (req, res) => {
-  const urlID = req.params.id;
-  const newURL = req.body.newURL;
-  // const userID = req.cookies["user_id"];
-  const userID = req.session.user_id;
-
-  if (!urlDatabase[urlID]) {
-    return res.status(404).send('URL not found!\n');
-  }
-
-  if (!userID) {
-    return res.status(403).send(`You must be logged in to edit an URL!\n`);
-  }
-
-  const userURLs = urlsForUser(userID, urlDatabase);
-  if (!userURLs[urlID]) {
-    return res.status(403).send(`You do not have permission to edit this URL!\n`);
-  }
-
-  urlDatabase[urlID]["longURL"] = newURL;
+  urlDatabase[shortURL]["longURL"] = newURL;
   return res.redirect("/urls");
 });
 
 //// REGISTER ////
 app.get("/register", (req, res) => {
-  // const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
   const templateVars = {
     user: users[userID],
@@ -244,7 +239,6 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   const { error, data } = addUser(req.body);
-
   if (error) {
     return res.status(400).send(`<html><h3>Registration Failed: ${error}</h3></html>`);
   }
@@ -255,7 +249,6 @@ app.post("/register", (req, res) => {
 
 //// LOGIN ////
 app.get("/login", (req, res) => {
-  // const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
   const templateVars = {
     user: users[userID]
@@ -275,7 +268,6 @@ app.post("/login", (req, res) => {
 
 //// LOGOUT (clear cookie) ////
 app.post("/logout", (req, res) => {
-  // res.clearCookie('user_id');
   req.session = null;
   return res.redirect('/urls');
 });
