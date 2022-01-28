@@ -60,6 +60,27 @@ const authenticateUser = (user, password) => {
   return { error: null, data: user };
 };
 
+//// add a new user, return error if criteria not met ////
+const addUser = (user) => {
+  const { email, password } = user;
+
+  if (!email || !password) {
+    return { error: "Email and password cannot be blank!", data: null };
+  }
+
+  const foundUser = findUserByEmail(email, users);
+  if (foundUser) {
+    return { error: "An user with that email already exists!", data: null };
+  }
+
+  const userID = generateRandomString();
+  const hashedPassword = bcrypt.hashSync(password);
+
+  const newUser = {id: userID, email, password: hashedPassword};
+  users[userID] = newUser;
+
+  return { error: null, data: newUser };
+};
 
 /* ///ROUTES/// */
 
@@ -219,30 +240,14 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const userID = generateRandomString();
-  const userEmail = req.body.email;
-  const userPassword = req.body.password;
 
-  if (!userEmail || !userPassword) {
-    return res.status(400).send("Registration Failed: email and password cannot be blank!");
+  const { error, data } = addUser(req.body);
+
+  if (error) {
+    return res.status(400).send(`<html><h3>Registration Failed: ${error}</h3></html>`);
   }
 
-  const user = findUserByEmail(userEmail, users);
-  if (user) {
-    return res.status(400).send("Registration Failed: a user with that email already exists!");
-  }
-
-  const hashedPassword = bcrypt.hashSync(userPassword);
-  // console.log(hashedPassword);
-
-  users[userID] = {
-    id: userID,
-    email: userEmail,
-    password: hashedPassword
-  };
-
-  // res.cookie("user_id", userID);
-  req.session.user_id = userID;
+  req.session.user_id = data.id;
   return res.redirect("/urls");
 });
 
