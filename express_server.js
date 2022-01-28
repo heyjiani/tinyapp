@@ -8,6 +8,7 @@ const bcrypt = require('bcryptjs');
 const { findUserByEmail } = require('./helpers');
 const { generateRandomString } = require('./helpers');
 const { urlsForUser } = require('./helpers');
+// const { authenticateUser } = require('./helpers');
 
 //// implement middleware ////
 app.use(bodyParser.urlencoded({extended: true}));
@@ -46,6 +47,20 @@ const users = {
 };
 
 
+//// return error if user email/password are not a match ////
+const authenticateUser = (user, password) => {
+  if (!user) {
+    return { error: "Email doesn't exist.", data: null };
+  }
+
+  if (!bcrypt.compareSync(password, user.password)) {
+    return { error: "Password doesn't match.", data: null };
+  }
+
+  return { error: null, data: user };
+};
+
+
 /* ///ROUTES/// */
 
 app.get("/", (req, res) => {
@@ -68,7 +83,7 @@ app.get("/urls", (req, res) => {
   if (!userID) {
     return res.status(401).send(
       `<html><h3>You must <a href="http://localhost:8080/login">log in</a> to see this page!</h2></html>`
-      );
+    );
   } 
 
   const userURLs = urlsForUser(userID, urlDatabase);
@@ -246,15 +261,11 @@ app.post("/login", (req, res) => {
   const userPassword = req.body.password;
   const user = findUserByEmail(userEmail, users);
 
-  if (!user) {
-    return res.status(403).send("Login failed: Make sure you entered the right email and try again.");
+  const { error, data } = authenticateUser(user, userPassword);
+  if (error) {
+    return res.status(403).send(`<html>Login Failed: ${error}</html>`);
   }
 
-  if (!bcrypt.compareSync(userPassword, user.password)) {
-    return res.status(403).send("Login failed: Make sure you entered the right password and try again.");
-  }
-
-  // res.cookie("user_id", user.id);
   req.session.user_id = user.id;
   return res.redirect('/urls');
 });
