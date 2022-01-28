@@ -66,15 +66,18 @@ app.get("/urls", (req, res) => {
   // const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
   if (!userID) {
-    res.send(`<html>You must <a href="http://localhost:8080/login">log in</a> to see this page!</html>`)
-  } else {
-    const userURLs = urlsForUser(userID, urlDatabase);
-    const templateVars = {
-      user: users[userID],
-      urls: userURLs
-    };
-    res.render("urls_index", templateVars);
-  }
+    return res.status(401).send(
+      `<html><h3>You must <a href="http://localhost:8080/login">log in</a> to see this page!</h2></html>`
+      );
+  } 
+
+  const userURLs = urlsForUser(userID, urlDatabase);
+  const templateVars = {
+    user: users[userID],
+    urls: userURLs
+  };
+
+  return res.render("urls_index", templateVars);
 });
 
 //// CREATE NEW SHORT URL ////
@@ -86,17 +89,17 @@ app.get("/urls/new", (req, res) => {
   };
   // console.log('TEST--userID: ', userID);
   if (!userID) {
-    res.redirect("/login");
-  } else {
-    res.render("urls_new", templateVars);
-  }
+    return res.redirect("/login");
+  } 
+
+  return res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   // const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
   if (!userID) {
-    res.status("403").send("Access Denied: Please log in first!\n");
+    return res.status("403").send("Access Denied: Please log in first!\n");
   }
 
   const shortURL = generateRandomString();
@@ -107,17 +110,17 @@ app.post("/urls", (req, res) => {
     userID: userID
   };
   // console.log(`URL Database:`, urlDatabase);
-  res.redirect(`/urls/${shortURL}`);
+  return res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]) {
-    res.status("404").send("OOPS! Looks like the link does not exist.");
-  } else {
-    const longURL = urlDatabase[shortURL]["longURL"];
-    res.redirect(longURL);
-  }
+    return res.status("404").send("OOPS! Looks like the link does not exist.");
+  } 
+
+  const longURL = urlDatabase[shortURL]["longURL"];
+  return res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -140,7 +143,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: shortURL,
     longURL: userURLs[shortURL]["longURL"]
   };
-  res.render("urls_show", templateVars)
+  return res.render("urls_show", templateVars)
 });
 
 //// DELETE URL ////
@@ -157,13 +160,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     return res.status(403).send(`You must be logged in to edit an URL!\n`);
   }
 
-  const userURLs = urlsForUser(userID);
+  const userURLs = urlsForUser(userID, urlDatabase);
   if (!userURLs[shortURL]) {
     return res.status(403).send(`You do not have permission to edit this URL!\n`);
   }
 
   delete urlDatabase[shortURL];
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 //// EDIT URL ////
@@ -187,7 +190,7 @@ app.post("/urls/:id", (req, res) => {
   }
 
   urlDatabase[urlID]["longURL"] = newURL;
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 //// REGISTER ////
@@ -197,7 +200,7 @@ app.get("/register", (req, res) => {
   const templateVars = {
     user: users[userID],
   }
-  res.render("registration", templateVars);
+  return res.render("registration", templateVars);
 });
 
 app.post("/register", (req, res) => {
@@ -235,7 +238,7 @@ app.get("/login", (req, res) => {
   const templateVars = {
     user: users[userID]
   };
-  res.render("login", templateVars);
+  return res.render("login", templateVars);
 });
 
 app.post("/login", (req, res) => {
@@ -260,12 +263,12 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   // res.clearCookie('user_id');
   req.session = null;
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 app.get("*", (req, res) => {
   res.statusCode = 404;
-  res.send(`${res.statusCode} Page Not Found :(`)
+  return res.send(`${res.statusCode} Page Not Found :(`)
 });
 
 app.listen(PORT, () => {
