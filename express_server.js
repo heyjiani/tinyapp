@@ -6,9 +6,7 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
 /// import helper functions ///
-const { findUserByEmail } = require('./helpers');
 const { generateRandomString } = require('./helpers');
-const { urlsForUser } = require('./helpers');
 const { generateUserHelpers } = require('./helpers');
 const { generateUrlHelpers } = require('./helpers');
 
@@ -47,13 +45,18 @@ const users = {
   }
 };
 
+//// EXTRACT HELPER FUNCTIONS ////
+
 /// user registration/login helper functions
 const { authenticateUser, addUser } = generateUserHelpers(users, bcrypt);
 
 /// url modifying/deleting function
-const { modifyURL } = generateUrlHelpers(urlDatabase);
+const { urlsForUser, modifyURL } = generateUrlHelpers(urlDatabase);
 
+
+//////////////////
 /* ///ROUTES/// */
+//////////////////
 
 //// HOME ////
 app.get("/", (req, res) => {
@@ -126,23 +129,15 @@ app.get("/u/:shortURL", (req, res) => {
 
 //// DISPLAY PAGE FOR SHORTENED URL ////
 app.get("/urls/:shortURL", (req, res) => {
-  const userID = req.session.userID;
-
-  if (!userID) {
-    return res.send(`<html>You must <a href="http://localhost:8080/login">log in</a> to see this page!</html>`);
-  }
-
-  const shortURL = req.params.shortURL;
-  const userURLs = urlsForUser(userID, urlDatabase);
-
-  if (!userURLs[shortURL]) {
-    return res.status("404").send("Page not found!");
+  const { error, urlID, userID, userURLs } = modifyURL(req.params, req.session);
+  if (error) {
+    return res.status(404).send(`<h3>${error}</h3>`);
   }
 
   const templateVars = {
     user: users[userID],
-    shortURL: shortURL,
-    longURL: userURLs[shortURL]["longURL"]
+    shortURL: urlID,
+    longURL: userURLs[urlID]["longURL"]
   };
   return res.render("urls_show", templateVars);
 });
