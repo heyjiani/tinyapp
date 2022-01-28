@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: "session",
   keys: ["swiss cheese plant under the sun", "monstera adansonii"]
-}))
+}));
 
 app.set("view engine", "ejs");
 
@@ -24,24 +24,24 @@ app.set("view engine", "ejs");
 
 const urlDatabase = {
   "b2xVn2": {
-      longURL: "http://www.lighthouselabs.ca",
-      userID: "abCd12"
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "abCd12"
   },
   "9sm5xK": {
-      longURL: "http://www.google.com",
-      userID: "haha67"
+    longURL: "http://www.google.com",
+    userID: "haha67"
   }
 };
 
 const users = {
   "abCd12": {
-    id: "abCd12", 
-    email: "trixie@example.com", 
+    id: "abCd12",
+    email: "trixie@example.com",
     password: bcrypt.hashSync("barbie")
   },
- "haha67": {
-    id: "haha67", 
-    email: "katya@example.com", 
+  "haha67": {
+    id: "haha67",
+    email: "katya@example.com",
     password: bcrypt.hashSync("dishwasher-funk")
   }
 };
@@ -121,10 +121,10 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const userID = req.session.userID;
   const loginHTML = `<a href="http://localhost:8080/login">log in</a>`;
-  const registerHTML = `<a href="http://localhost:8080/register">register</a>`
+  const registerHTML = `<a href="http://localhost:8080/register">register</a>`;
   if (!userID) {
     return res.status(401).send(`<h3>You must ${loginHTML} or ${registerHTML} to see this page!</h3>`);
-  } 
+  }
 
   const userURLs = urlsForUser(userID, urlDatabase);
   const templateVars = {
@@ -135,7 +135,7 @@ app.get("/urls", (req, res) => {
   return res.render("urls_index", templateVars);
 });
 
-//// CREATE NEW SHORT URL ////
+//// DISPLAY PAGE TO CREATE NEW SHORT URL ////
 app.get("/urls/new", (req, res) => {
   const userID = req.session.userID;
   const templateVars = {
@@ -143,15 +143,17 @@ app.get("/urls/new", (req, res) => {
   };
   if (!userID) {
     return res.redirect("/login");
-  } 
+  }
 
   return res.render("urls_new", templateVars);
 });
 
+//// CREATE NEW SHORT URL ////
 app.post("/urls", (req, res) => {
   const userID = req.session.userID;
   if (!userID) {
-    return res.status("403").send("Access Denied: Please log in first!\n");
+    const loginHTML = `<a href="http://localhost:8080/login">log in</a>`;
+    return res.status("403").send(`<h3>Access Denied: Please ${loginHTML} first!</h3>`);
   }
 
   const shortURL = generateRandomString();
@@ -164,28 +166,30 @@ app.post("/urls", (req, res) => {
   return res.redirect(`/urls/${shortURL}`);
 });
 
+//// ACCESS LINK THROUGH SHORT URL ////
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]) {
-    return res.status("404").send("OOPS! Looks like the link does not exist.");
-  } 
+    return res.status("404").send(`OOPS! Looks like the link does not exist.\n`);
+  }
 
   const longURL = urlDatabase[shortURL]["longURL"];
   return res.redirect(longURL);
 });
 
+//// DISPLAY PAGE FOR SHORTENED URL ////
 app.get("/urls/:shortURL", (req, res) => {
   const userID = req.session.userID;
 
   if (!userID) {
-    return res.send(`<html>You must <a href="http://localhost:8080/login">log in</a> to see this page!</html>`)
-  } 
+    return res.send(`<html>You must <a href="http://localhost:8080/login">log in</a> to see this page!</html>`);
+  }
 
   const shortURL = req.params.shortURL;
   const userURLs = urlsForUser(userID, urlDatabase);
 
   if (!userURLs[shortURL]) {
-    return res.status("404").send("Page not found!")
+    return res.status("404").send("Page not found!");
   }
 
   const templateVars = {
@@ -193,7 +197,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: shortURL,
     longURL: userURLs[shortURL]["longURL"]
   };
-  return res.render("urls_show", templateVars)
+  return res.render("urls_show", templateVars);
 });
 
 //// DELETE URL ////
@@ -224,7 +228,7 @@ app.get("/register", (req, res) => {
   const userID = req.session.userID;
   const templateVars = {
     user: users[userID],
-  }
+  };
   return res.render("registration", templateVars);
 });
 
@@ -275,7 +279,7 @@ app.get("/urls.json", (req, res) => {
 
 app.get("*", (req, res) => {
   res.statusCode = 404;
-  return res.send(`${res.statusCode} Page Not Found :(`)
+  return res.send(`${res.statusCode} Page Not Found :(`);
 });
 
 app.listen(PORT, () => {
