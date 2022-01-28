@@ -5,7 +5,9 @@ const bodyParser = require("body-parser");
 // const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-const findUserByEmail = require('./helpers');
+const { findUserByEmail } = require('./helpers');
+const { generateRandomString } = require('./helpers');
+const { urlsForUser } = require('./helpers');
 
 //// implement middleware ////
 app.use(bodyParser.urlencoded({extended: true}));
@@ -43,35 +45,6 @@ const users = {
   }
 };
 
-/* HELPER FUNCTIONS */
-//// generate random id ////
-function generateRandomString() {
-  return Math.random().toString(36).substring(3, 9);
-}
-
-//// find user in database ////
-// const findUserByEmail = (email, database) => {
-//   for (const userID in database) {
-//     const user = database[userID];
-//     if (user.email === email) return user;
-//   }
-//   return false;
-// };
-
-//// return URLs attached to specific user ID ////
-const urlsForUser = (id) => {
-  const userURLs = {};
-  for (const url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      userURLs[url] = {
-        longURL: urlDatabase[url]["longURL"],
-        userID: id
-      }
-    }
-  }
-  return userURLs;
-};
-
 
 /* ///ROUTES/// */
 
@@ -95,7 +68,7 @@ app.get("/urls", (req, res) => {
   if (!userID) {
     res.send(`<html>You must <a href="http://localhost:8080/login">log in</a> to see this page!</html>`)
   } else {
-    const userURLs = urlsForUser(userID);
+    const userURLs = urlsForUser(userID, urlDatabase);
     const templateVars = {
       user: users[userID],
       urls: userURLs
@@ -156,7 +129,7 @@ app.get("/urls/:shortURL", (req, res) => {
   } 
 
   const shortURL = req.params.shortURL;
-  const userURLs = urlsForUser(userID);
+  const userURLs = urlsForUser(userID, urlDatabase);
 
   if (!userURLs[shortURL]) {
     return res.status("404").send("Page not found!")
@@ -208,7 +181,7 @@ app.post("/urls/:id", (req, res) => {
     return res.status(403).send(`You must be logged in to edit an URL!\n`);
   }
 
-  const userURLs = urlsForUser(userID);
+  const userURLs = urlsForUser(userID, urlDatabase);
   if (!userURLs[urlID]) {
     return res.status(403).send(`You do not have permission to edit this URL!\n`);
   }
